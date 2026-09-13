@@ -6,6 +6,8 @@
 # ive made so many concepts, but the time is............... NOW!
 <bold>Its a web browser, made for fun.<bold>
 
+Forking my own program (tuff)
+
 # Ever just, wanted to have a web browser that was made for fun?
 Lilbrowser has you!
 Lilbrowser is made with forms & ai (i can't code, also dont get mad i used ai, THIS WEB BROWSER IS MADE FOR FUN YOU DUMA-)
