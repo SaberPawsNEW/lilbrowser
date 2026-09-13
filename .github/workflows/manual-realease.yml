@@ -1,0 +1,47 @@
+name: Manual Build and Release
+
+on:
+  # This adds the manual "Run workflow" button on GitHub
+  workflow_dispatch:
+
+jobs:
+  manual-build:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
+
+    - name: Restore NuGet Packages
+      run: nuget restore
+
+    - name: Build WinForms App
+      run: msbuild /p:Configuration=Release
+
+    - name: Zip Artifacts
+      shell: powershell
+      run: |
+        if (Test-Path bin/Release) {
+          Compress-Archive -Path bin/Release/* -DestinationPath ./ManualWinForms-Release.zip
+        } else {
+          Write-Error "Release build folder not found where expected."
+        }
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: manual-release-${{ github.run_number }}
+        name: "Manual Release #${{ github.run_number }}"
+        body: "Manual build triggered directly from GitHub Actions dashboard."
+        draft: false
+        prerelease: false
+        files: ./ManualWinForms-Release.zip
