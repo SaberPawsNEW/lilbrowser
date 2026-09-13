@@ -16,24 +16,33 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+    # 1. Setup MSBuild for legacy .NET Framework
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
 
-    - name: Restore Dependencies
-      run: dotnet restore
+    # 2. Setup NuGet for package restoration
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
 
+    # 3. Restore older package formats
+    - name: Restore NuGet Packages
+      run: nuget restore
+
+    # 4. Build using MSBuild (Neutral to project folders)
     - name: Build WinForms App
-      run: dotnet build --configuration Release --no-restore
+      run: msbuild /p:Configuration=Release
 
-    - name: Publish Binaries
-      run: dotnet publish --configuration Release --output ./publish
-
+    # 5. Zip the output from the Release folder
     - name: Zip Artifacts
       shell: powershell
-      run: Compress-Archive -Path ./publish/* -DestinationPath ./WinFormsApp-Release.zip
+      run: |
+        if (Test-Path bin/Release) {
+          Compress-Archive -Path bin/Release/* -DestinationPath ./WinFormsApp-Release.zip
+        } else {
+          Write-Error "Release build folder not found where expected."
+        }
 
+    # 6. Publish the Release
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
