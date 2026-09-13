@@ -2,6 +2,8 @@
 
 Lilbrowser is a compact Windows Forms browser shell targeting .NET Framework 4.6.2. It keeps the native `WebBrowser` control and layers a practical browser UI around it: navigation controls, a search-or-address bar, visible navigation progress, and an in-session downloads panel.
 
+(This was made for fun using ai. Still useful for older systems tho
+
 ## Features
 
 - Back, forward, refresh, and home controls
