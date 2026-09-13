@@ -29,3 +29,5 @@ msbuild Lilbrowser.sln /t:Clean,Build /p:Configuration=Release
 The app uses the Windows Forms `WebBrowser` control, so its rendering engine and native download prompt are provided by Windows. The download panel is intentionally an in-session activity history rather than a separate download engine.
 # Oh, and its automated by dependabot
 every once and a while il add an installer ver tho
+# notes:
+the original fork is better for older (vista ish) systems. dunno abt the compatability of any of them but all i can say is that this repo is a less chance of working good on old systems, but they both work on windows 10 and 11. (linux compatability: on mint on orig repo nope, on this one idk)
