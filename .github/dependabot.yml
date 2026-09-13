@@ -1,9 +1,54 @@
-version: 2
-updates:
-  - package-ecosystem: "nuget"
-    # Points to the root directory where your code and solution/.csproj files live
-    directory: "/" 
-    schedule:
-      # How often to check for updates (daily, weekly, or monthly)
-      interval: "weekly" 
-    open-pull-requests-limit: 5
+name: Dependabot Auto-Build and Release
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-release:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 1. Setup MSBuild for legacy .NET Framework
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    # 2. Setup NuGet for package restoration
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
+
+    # 3. Restore older package formats
+    - name: Restore NuGet Packages
+      run: nuget restore
+
+    # 4. Build using MSBuild (Neutral to project folders)
+    - name: Build WinForms App
+      run: msbuild /p:Configuration=Release
+
+    # 5. Zip the output from the Release folder
+    - name: Zip Artifacts
+      shell: powershell
+      run: |
+        if (Test-Path bin/Release) {
+          Compress-Archive -Path bin/Release/* -DestinationPath ./WinFormsApp-Release.zip
+        } else {
+          Write-Error "Release build folder not found where expected."
+        }
+
+    # 6. Publish the Release
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: dependabot-update-${{ github.run_number }}
+        name: "Dependabot Auto-Release #${{ github.run_number }}"
+        body: "Automated build triggered by a Dependabot dependency update."
+        draft: false
+        prerelease: false
+        files: ./WinFormsApp-Release.zip
