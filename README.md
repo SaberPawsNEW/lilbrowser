@@ -14,7 +14,7 @@ Lilbrowser is made with forms & ai (i can't code, also dont get mad i used ai, T
 
 # lilbrowser is [![inno setup too](https://skillicons.dev/icons?i=cs,innosetup)](https://skillicons.dev)
 ![Typing SVG](https://readme-typing-svg.demolab.com/?lines=AND+INNO+SETUP)
-
+# I haven't made an actual realease yet, look at the original resporuty for download. 
 
 
 
