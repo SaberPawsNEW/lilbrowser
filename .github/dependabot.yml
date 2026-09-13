@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    # Points to the root directory where your code and solution/.csproj files live
+    directory: "/" 
+    schedule:
+      # How often to check for updates (daily, weekly, or monthly)
+      interval: "weekly" 
+    open-pull-requests-limit: 5
