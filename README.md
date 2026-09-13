@@ -25,3 +25,5 @@ msbuild Lilbrowser.sln /t:Clean,Build /p:Configuration=Release
 ```
 
 The app uses the Windows Forms `WebBrowser` control, so its rendering engine and native download prompt are provided by Windows. The download panel is intentionally an in-session activity history rather than a separate download engine.
+# Oh, and its automated by dependabot
+every once and a while il add an installer ver tho
