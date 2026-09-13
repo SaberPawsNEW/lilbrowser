@@ -1,0 +1,45 @@
+name: Dependabot Auto-Build and Release
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-release:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    - name: Build WinForms App
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Publish Binaries
+      run: dotnet publish --configuration Release --output ./publish
+
+    - name: Zip Artifacts
+      shell: powershell
+      run: Compress-Archive -Path ./publish/* -DestinationPath ./WinFormsApp-Release.zip
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: dependabot-update-${{ github.run_number }}
+        name: "Dependabot Auto-Release #${{ github.run_number }}"
+        body: "Automated build triggered by a Dependabot dependency update."
+        draft: false
+        prerelease: false
+        files: ./WinFormsApp-Release.zip
