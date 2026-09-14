@@ -35,3 +35,5 @@ It runs without network access and covers URL normalization, local development a
 # This is now automated!
 dependabot updates the dependincies, then it sees a pull request, and makes a realease
 il make an installer ver every once and a while, still you should use the latest realease, even if it doesnt have an installer ver.
+## Compatibility
+I dunno, all I know is this prolly works with vista, and win11 and win10.
