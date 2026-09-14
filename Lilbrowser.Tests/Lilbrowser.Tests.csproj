@@ -33,9 +33,6 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\DownloadHistory.cs">
-      <Link>DownloadHistory.cs</Link>
-    </Compile>
     <Compile Include="..\NavigationTarget.cs">
       <Link>NavigationTarget.cs</Link>
     </Compile>

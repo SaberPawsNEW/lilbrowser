@@ -12,9 +12,7 @@ namespace Lilbrowser.Tests
                 ResolvesSearchTerms();
                 RejectsUnsupportedSchemes();
                 RejectsBlankInput();
-                KeepsDownloadHistoryInNewestFirstOrder();
-                CapsDownloadHistory();
-                Console.WriteLine("All browser support tests passed.");
+                Console.WriteLine("All navigation target tests passed.");
                 return 0;
             }
             catch (Exception exception)
@@ -48,40 +46,6 @@ namespace Lilbrowser.Tests
         private static void RejectsBlankInput()
         {
             AssertRejected("   ");
-        }
-
-        private static void KeepsDownloadHistoryInNewestFirstOrder()
-        {
-            var history = new DownloadHistory();
-            var first = new Uri("https://first.example/file.zip");
-            var second = new Uri("https://second.example/file.zip");
-            history.Add(first, new DateTime(2024, 1, 1, 10, 0, 0));
-            history.Add(second, new DateTime(2024, 1, 1, 10, 1, 0));
-
-            if (history.Count != 2 || !history.Snapshot()[0].Source.Equals(second))
-            {
-                throw new InvalidOperationException("Download history did not retain newest-first order.");
-            }
-
-            history.Clear();
-            if (history.Count != 0)
-            {
-                throw new InvalidOperationException("Download history did not clear.");
-            }
-        }
-
-        private static void CapsDownloadHistory()
-        {
-            var history = new DownloadHistory();
-            for (var index = 0; index < 105; index++)
-            {
-                history.Add(new Uri("https://example.com/" + index), DateTime.UtcNow);
-            }
-
-            if (history.Count != 100)
-            {
-                throw new InvalidOperationException("Download history did not enforce its maximum size.");
-            }
         }
 
         private static void AssertTarget(string input, string expected)

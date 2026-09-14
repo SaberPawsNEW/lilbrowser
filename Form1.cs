@@ -1,7 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
 using System.Windows.Forms;
 
 namespace Lilbrowser
@@ -10,30 +8,17 @@ namespace Lilbrowser
     {
         private const string HomePage = "https://www.google.com/";
         private const string ApplicationTitle = "Lilbrowser";
-        private readonly DownloadHistory downloadHistory = new DownloadHistory();
-        private bool isLoading;
 
         public Form1()
         {
             InitializeComponent();
             browser.ScriptErrorsSuppressed = true;
             UpdateNavigationButtons();
-            UpdateDownloadsPanel();
         }
 
         private void Form1_Shown(object sender, EventArgs e)
         {
             NavigateTo(new Uri(HomePage));
-        }
-
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Control && e.KeyCode == Keys.L)
-            {
-                addressBox.Focus();
-                addressBox.SelectAll();
-                e.SuppressKeyPress = true;
-            }
         }
 
         private void backButton_Click(object sender, EventArgs e)
@@ -65,53 +50,6 @@ namespace Lilbrowser
             NavigateTo(new Uri(HomePage));
         }
 
-        private void downloadsButton_Click(object sender, EventArgs e)
-        {
-            browserSplitContainer.Panel2Collapsed = !browserSplitContainer.Panel2Collapsed;
-            downloadsButton.Text = browserSplitContainer.Panel2Collapsed ? "Downloads" : "Hide downloads";
-
-            if (!browserSplitContainer.Panel2Collapsed)
-            {
-                downloadsListBox.Focus();
-            }
-        }
-
-        private void clearDownloadsButton_Click(object sender, EventArgs e)
-        {
-            downloadHistory.Clear();
-            UpdateDownloadsPanel();
-            SetStatus("Download history cleared.");
-        }
-
-        private void openDownloadsFolderButton_Click(object sender, EventArgs e)
-        {
-            var downloadsPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Downloads");
-
-            try
-            {
-                if (!Directory.Exists(downloadsPath))
-                {
-                    Directory.CreateDirectory(downloadsPath);
-                }
-
-                Process.Start(downloadsPath);
-            }
-            catch (Win32Exception)
-            {
-                SetStatus("Could not open the Downloads folder.");
-            }
-            catch (UnauthorizedAccessException)
-            {
-                SetStatus("The Downloads folder is not accessible.");
-            }
-            catch (IOException)
-            {
-                SetStatus("Could not open the Downloads folder.");
-            }
-        }
-
         private void goButton_Click(object sender, EventArgs e)
         {
             Uri target;
@@ -129,12 +67,10 @@ namespace Lilbrowser
 
         private void browser_Navigating(object sender, WebBrowserNavigatingEventArgs e)
         {
-            if (e.Url == null)
+            if (e.Url != null)
             {
-                return;
+                SetStatus("Loading " + e.Url.Host + "...");
             }
-
-            BeginLoading(e.Url);
         }
 
         private void browser_Navigated(object sender, WebBrowserNavigatedEventArgs e)
@@ -145,7 +81,7 @@ namespace Lilbrowser
 
         private void browser_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            // DocumentCompleted also fires for frames; update chrome only for the top-level document.
+            // DocumentCompleted also fires for frames; only update the chrome for the top-level page.
             if (browser.Url == null || !browser.Url.Equals(e.Url))
             {
                 return;
@@ -153,12 +89,12 @@ namespace Lilbrowser
 
             UpdateAddressBar();
             UpdateNavigationButtons();
-            EndLoading("Done");
+            SetStatus("Done");
         }
 
         private void browser_StatusTextChanged(object sender, EventArgs e)
         {
-            if (!isLoading && !string.IsNullOrWhiteSpace(browser.StatusText))
+            if (!string.IsNullOrWhiteSpace(browser.StatusText))
             {
                 SetStatus(browser.StatusText);
             }
@@ -166,19 +102,9 @@ namespace Lilbrowser
 
         private void browser_ProgressChanged(object sender, WebBrowserProgressChangedEventArgs e)
         {
-            if (!isLoading)
+            if (e.MaximumProgress > 0 && e.CurrentProgress >= 0 && e.CurrentProgress < e.MaximumProgress)
             {
-                return;
-            }
-
-            if (e.MaximumProgress > 0 && e.CurrentProgress >= 0)
-            {
-                progressBar.Style = ProgressBarStyle.Continuous;
-                progressBar.Value = Math.Min(100, Math.Max(0, (int)(e.CurrentProgress * 100L / e.MaximumProgress)));
-            }
-            else
-            {
-                progressBar.Style = ProgressBarStyle.Marquee;
+                SetStatus("Loading...");
             }
         }
 
@@ -197,17 +123,6 @@ namespace Lilbrowser
         private void browser_CanGoForwardChanged(object sender, EventArgs e)
         {
             UpdateNavigationButtons();
-        }
-
-        private void browser_FileDownload(object sender, EventArgs e)
-        {
-            // WebBrowser owns the native download prompt and transfer. We keep an in-session
-            // history entry so the user can see that the request was handed to the browser.
-            downloadHistory.Add(browser.Url, DateTime.Now);
-            UpdateDownloadsPanel();
-            browserSplitContainer.Panel2Collapsed = false;
-            downloadsButton.Text = "Hide downloads";
-            SetStatus("Download started. Choose a save location in the download dialog.");
         }
 
         private void browser_NewWindow(object sender, CancelEventArgs e)
@@ -229,25 +144,8 @@ namespace Lilbrowser
             }
             catch (InvalidOperationException)
             {
-                EndLoading("The browser is not ready to navigate yet.");
+                SetStatus("The browser is not ready to navigate yet.");
             }
-        }
-
-        private void BeginLoading(Uri target)
-        {
-            isLoading = true;
-            progressBar.Visible = true;
-            progressBar.Style = ProgressBarStyle.Marquee;
-            SetStatus("Loading " + DisplayHost(target) + "...");
-        }
-
-        private void EndLoading(string statusMessage)
-        {
-            isLoading = false;
-            progressBar.Style = ProgressBarStyle.Continuous;
-            progressBar.Value = 100;
-            progressBar.Visible = false;
-            SetStatus(statusMessage);
         }
 
         private void UpdateAddressBar()
@@ -265,34 +163,9 @@ namespace Lilbrowser
             refreshButton.Enabled = browser.Url != null;
         }
 
-        private void UpdateDownloadsPanel()
-        {
-            downloadsListBox.BeginUpdate();
-            try
-            {
-                downloadsListBox.Items.Clear();
-                foreach (var entry in downloadHistory.Snapshot())
-                {
-                    downloadsListBox.Items.Add(entry);
-                }
-            }
-            finally
-            {
-                downloadsListBox.EndUpdate();
-            }
-
-            downloadsEmptyLabel.Visible = downloadHistory.Count == 0;
-            clearDownloadsButton.Enabled = downloadHistory.Count > 0;
-        }
-
         private void SetStatus(string message)
         {
             statusLabel.Text = string.IsNullOrWhiteSpace(message) ? "Ready" : message;
-        }
-
-        private static string DisplayHost(Uri target)
-        {
-            return target == null || string.IsNullOrWhiteSpace(target.Host) ? "page" : target.Host;
         }
     }
 }
